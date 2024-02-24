@@ -39,16 +39,18 @@
                     <?php
                     foreach ($lesTransactions as $transaction) {
                         echo '
-            <tr>
-            <td><input type="text" class="nomProduit" value="' . $transaction['aNom'] . '" disabled></td>
-            <td><input type="number" class="quantite" value="' . $transaction['tQuantite'] . '" disabled></td>
-            <td><input type="number" class="prixUnitaire" value="' . $transaction['aPrixUnitaire'] . '" disabled></td>
-            <td><input type="text" class="commentaire" value="' . $transaction['tCommentaire'] . '" disabled></td>
-            <td><input type="date" class="dateExp" value="' . $transaction['aDateExpiration'] . '" disabled></td>
-            <td><input type="date" class="tDate" value="' . $transaction['tDate'] . '" disabled></td>
-            <td class="tdBouton"><button class="add"><i class="fa-solid fa-plus"></i></button><button class="remove"><i class="fa-solid fa-trash"></i></button></td>
-            <td><input type="hidden" class="idProduit" value="' . $transaction['aId'] . '" disabled></td>
-            </tr>';
+                            <tr>
+                                <td><input type="text" class="nomProduit" value="' . $transaction['aNom'] . '" disabled></td>
+                                <td><input type="number" class="quantite" value="' . $transaction['tQuantite'] . '" disabled></td>
+                                <td><input type="number" class="prixUnitaire" value="' . $transaction['aPrixUnitaire'] . '" disabled></td>
+                                <td><input type="text" class="commentaire" value="' . $transaction['tCommentaire'] . '" disabled></td>
+                                <td><input type="date" class="dateExp" value="' . $transaction['aDateExpiration'] . '" disabled></td>
+                                <td><input type="date" class="tDate" value="' . $transaction['tDate'] . '" disabled></td>
+                                <td class="tdBouton"><button class="add"><i class="fa-solid fa-plus"></i></button><button class="remove"><i class="fa-solid fa-trash"></i></button></td>
+                                <td><input type="hidden" class="idProduit" value="' . $transaction['aId'] . '" disabled></td>
+                                <td><input type="hidden" class="userTransac" value="' . $transaction['uId'] . '" disabled></td>
+                            </tr>'
+                        ;
                     }
                     ?>
                 </tbody>

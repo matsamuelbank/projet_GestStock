@@ -15,7 +15,6 @@ class PdoGestStock
     private function __construct()
     {
         PdoGestStock::$monPdo = new PDO(PdoGestStock::$serveur . ';' . PdoGestStock::$bdd, PdoGestStock::$user, PdoGestStock::$mdp);
-        //PdoGsb::$monPdo->query("SET CHARACTER SET utf8");SET client_encoding = 'UTF8'; 
     }
 
     public function _destruct()
@@ -45,26 +44,6 @@ class PdoGestStock
         $infoUser = $stmt->fetch();
         return $infoUser;
     }
-
-    public function getCommentaires($idFilm)
-    {
-        $req = "SELECT commentaire.coText, utilisateur.uPseudo, notation.note, commentaire.coIdFilm
-        FROM commentaire 
-        INNER JOIN utilisateur ON utilisateur.uId = commentaire.coIdUtilisateur
-        INNER JOIN notation ON utilisateur.uId = notation.nIdUtilisateur AND commentaire.coIdFilm = notation.nIdFilm
-        WHERE commentaire.coIdFilm =:idFilm";
-
-        $stmt = PdoGestStock::$monPdo->prepare($req);
-        $stmt->bindParam(':idFilm', $idFilm);
-
-        if (!$stmt->execute()) {
-            afficherErreurSQL("Problème lors de la récupération des commentaires.", $req, PdoGestStock::$monPdo->errorInfo());
-        }
-
-        $lesCommentaires = $stmt->fetchAll();
-        return $lesCommentaires;
-    }
-
 
     public function addCommentaire($valueCommentaire, $coDateDePublication, $coIdFilm, $coIdUtilisateur)
     {
@@ -126,14 +105,15 @@ class PdoGestStock
         }
     }
 
-    public function updateTransaction($idArticle, $quantite, $tDate, $tType, $commentaire, $idUtilisateur)
+    public function updateTransaction($idArticle, $quantite, $tDate, $tType, $commentaire, $idUtilisateur, $userTransac)
     {
         $req = 'UPDATE transactions 
-        SET tQuantite = :tQuantite, 
-            tDate = :tDate, 
-            tType = :tType, 
-            tCommentaire = :tCommentaire 
-        WHERE tArticleId = :tArticleId AND uId = :uId';
+                SET tQuantite = :tQuantite, 
+                    tDate = :tDate, 
+                    tType = :tType, 
+                    tCommentaire = :tCommentaire,
+                    uId = :idUtilisateur
+                WHERE tArticleId = :tArticleId AND uId = :userTransac';
 
         $stmt = PdoGestStock::$monPdo->prepare($req);
         $stmt->bindParam(':tQuantite', $quantite);
@@ -141,14 +121,16 @@ class PdoGestStock
         $stmt->bindParam(':tType', $tType);
         $stmt->bindParam(':tCommentaire', $commentaire);
         $stmt->bindParam(':tArticleId', $idArticle);
-        $stmt->bindParam(':uId', $idUtilisateur);
+        $stmt->bindParam(':idUtilisateur', $idUtilisateur);
+        $stmt->bindParam(':userTransac', $userTransac);
 
         if (!$stmt->execute()) {
-            afficherErreurSQL("Problème lors de la mise à jour de la transaction.", $req,  PdoGestStock::$monPdo->errorInfo());
+            afficherErreurSQL("Problème lors de la mise à jour de la transaction.", $req, PdoGestStock::$monPdo->errorInfo());
         } else {
             return true;
         }
     }
+
 
     public function updateArticle($idArticle, $quantite, $prixUnitaire, $dateExp, $commentaire, $idUtilisateur)
     {
@@ -204,7 +186,7 @@ class PdoGestStock
 
     public function getTransactions()
     {
-        $req = 'SELECT aId,aNom,aPrixUnitaire, aDateExpiration,tId,tDate,tQuantite,tCommentaire from articles
+        $req = 'SELECT aId,transactions.uId,aNom,aPrixUnitaire, aDateExpiration,tId,tDate,tQuantite,tCommentaire from articles
         INNER JOIN transactions on transactions.tArticleId = articles.aId ORDER BY tDate DESC';
         $stmt = PdoGestStock::$monPdo->prepare($req);
 
@@ -236,15 +218,15 @@ class PdoGestStock
         $req = 'DELETE FROM transactions WHERE tArticleId = :idArticle';
         $stmt = PdoGestStock::$monPdo->prepare($req);
         $stmt->bindParam(':idArticle', $idArticle);
-    
+
         if (!$stmt->execute()) {
             afficherErreurSQL("Problème lors de la suppression des transactions liées à l'article.", $req, PdoGestStock::$monPdo->errorInfo());
         } else {
             return true;
         }
     }
-    
-    
+
+
     public function supprimerArticle($idArticle)
     {
         $req = 'DELETE FROM articles WHERE aId = :idArticle';
@@ -254,6 +236,59 @@ class PdoGestStock
         if (!$stmt->execute()) {
             afficherErreurSQL("Problème lors de la suppression de l'article.", $req, PdoGestStock::$monPdo->errorInfo());
         } else {
+            return true;
+        }
+    }
+
+    public function addAlertProduct($alArticleId, $alSeuil)
+    {
+        $req = 'INSERT INTO alertes (alArticleId,alSeuil) VALUES(:alArticleId, :alSeuil )';
+        $stmt = PdoGestStock::$monPdo->prepare($req);
+        $stmt->bindParam(':alArticleId', $alArticleId);
+        $stmt->bindParam(':alSeuil', $alSeuil);
+
+        if (!$stmt->execute()) {
+            afficherErreurSQL("Problème lors de l'ajout de l'alerte.", $req, PdoGestStock::$monPdo->errorInfo());
+        } else {
+            return true;
+        }
+    }
+
+    public function getAllAlerts()
+    {
+        $req = 'SELECT alArticleId,aNom,aQuantite,aPrixUnitaire,aDateExpiration from alertes
+        INNER JOIN articles ON aId = alArticleId';
+        $stmt = PdoGestStock::$monPdo->prepare($req);
+
+        if (!$stmt->execute()) {
+            afficherErreurSQL("Problème lors de la récupération des alertes.", $req, PdoGestStock::$monPdo->errorInfo());
+        } else {
+            $lesAlertes = $stmt->fetchAll();
+            return $lesAlertes;
+        }
+    }
+
+    public function alertExists($alArticleId)
+    {
+        $req = 'SELECT COUNT(*) FROM alertes WHERE alArticleId = :alArticleId ';
+        $stmt = PdoGestStock::$monPdo->prepare($req);
+        $stmt->bindParam(':alArticleId', $alArticleId);
+        $stmt->execute();
+        $count = $stmt->fetchColumn();
+
+        return $count > 0;
+    }
+
+    public function removeAlert($alArticleId)
+    {
+        $req = 'DELETE FROM alertes WHERE alArticleId = :alArticleId';
+        $stmt = PdoGestStock::$monPdo->prepare($req);
+        $stmt->bindParam(':alArticleId', $alArticleId);
+       
+        if (!$stmt->execute()) {
+            afficherErreurSQL("Problème lors de la suppréssion de l'alerte.", $req, PdoGestStock::$monPdo->errorInfo());
+        } else {
+            
             return true;
         }
     }

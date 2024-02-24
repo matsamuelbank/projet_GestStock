@@ -35,20 +35,30 @@ class GestionStock
         $this->pdo->addTransaction($tArticleId, $quantite, $tDate, $tType, $commentaire, $idUtilisateur);
     }
 
-    public function ajoutTransaction($idArticle, $quantite, $tDate, $commentaire, $idUtilisateur, $dateExp, $prixUnitaire)
+    public function ajoutTransaction($idArticle, $quantite, $tDate, $commentaire, $idUtilisateur, $dateExp, $prixUnitaire, $userTransac)
     {
         $ancienneQuantite = $this->pdo->getQuantite($idArticle);
         $tType = 'ENTREE'; // Par défaut c'est une entrée
-        
+
         if ($quantite < $ancienneQuantite) {
             $tType = 'SORTIE'; // Si la nouvelle quantité est inférieure à l'ancienne, c'est une sortie
         } elseif ($quantite > $ancienneQuantite) {
             $tType = 'ENTREE'; // Si la nouvelle quantité est supérieure à l'ancienne, c'est une entrée
         }
-        
 
-        $this->pdo->updateTransaction($idArticle, $quantite, $tDate, $tType, $commentaire, $idUtilisateur);
+
         $this->pdo->updateArticle($idArticle, $quantite, $prixUnitaire, $dateExp, $commentaire, $idUtilisateur);
+        $this->pdo->updateTransaction($idArticle, $quantite, $tDate, $tType, $commentaire, $idUtilisateur, $userTransac);
+
+        if($quantite >10)
+        {
+            $this->pdo->removeAlert($idArticle,$quantite);
+        }
+        else{
+            if (!$this->pdo->alertExists($idArticle)) {
+                $this->pdo->addAlertProduct($idArticle, $quantite);
+            }
+        }
     }
 
     public function deleteProduit($idArticle)
@@ -65,6 +75,22 @@ class GestionStock
 
     public function suiviDesStocks()
     {
+        $lesProduits = $this->pdo->getAllProducts();
+
+        foreach ($lesProduits as $leProduit) {
+            $alArticleId = $leProduit['aId'];
+            $alSeuil = $leProduit['aQuantite'];
+
+            // Si la quantité est inférieure ou égale à 10, on ajoute une alerte si elle n'existe pas
+            if ($leProduit['aQuantite'] <= 10) {
+                if (!$this->pdo->alertExists($alArticleId)) {
+                    $this->pdo->addAlertProduct($alArticleId, $alSeuil);
+                }
+            }
+           
+        }
+
+        $lesAlertes = $this->pdo->getAllAlerts();
         include('../vues/suiviDesStocks.php');
     }
 }
@@ -97,9 +123,9 @@ try {
             $action->suiviDesStocks();
         }
 
-      
+
         if ($_REQUEST['action'] == 'ajoutTransaction') {
-            if (isset($_POST['idProduit'], $_POST['quantite'], $_POST['commentaire'], $_POST['tDate'], $_POST['idUser'], $_POST["dateExp"], $_POST["prixUnitaire"])) {
+            if (isset($_POST['idProduit'], $_POST['quantite'], $_POST['commentaire'], $_POST['tDate'], $_POST['idUser'], $_POST["dateExp"], $_POST["prixUnitaire"], $_POST["userTransac"])) {
                 $idArticle = $action->filterData($_POST['idProduit']);
                 $quantite = $action->filterData($_POST['quantite']);
                 $commentaire = $action->filterData($_POST['commentaire']);
@@ -107,8 +133,9 @@ try {
                 $idUtilisateur = $action->filterData($_POST['idUser']);
                 $dateExp = $_POST["dateExp"];
                 $prixUnitaire = $action->filterData($_POST["prixUnitaire"]);
+                $userTransac = $action->filterData($_POST["userTransac"]);
 
-                $action->ajoutTransaction($idArticle, $quantite, $tDate, $commentaire, $idUtilisateur, $dateExp, $prixUnitaire);
+                $action->ajoutTransaction($idArticle, $quantite, $tDate, $commentaire, $idUtilisateur, $dateExp, $prixUnitaire, $userTransac);
             }
         }
 
@@ -119,7 +146,6 @@ try {
                 $action->deleteProduit($idArticle, $quantite, $tDate, $commentaire, $idUtilisateur, $dateExp, $prixUnitaire);
             }
         }
-        
     }
 } catch (Exception $e) {
     echo 'Erreur : ' . $e->getMessage();

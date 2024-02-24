@@ -31,6 +31,7 @@ $(document).ready(function () {
             var dateExp = parentRow.find(".dateExp").val();
             let idUser = $("#idUser").val();
             let prixUnitaire = parentRow.find(".prixUnitaire").val();
+            let userTransac = parentRow.find(".userTransac").val();
 
             $.ajax({
                 url: '../controleurs/c_gestStock.php?action=ajoutTransaction',
@@ -42,7 +43,8 @@ $(document).ready(function () {
                     'tDate': dateTransaction,
                     'idUser': idUser,
                     'dateExp': dateExp,
-                    'prixUnitaire': prixUnitaire
+                    'prixUnitaire': prixUnitaire,
+                    'userTransac' : userTransac
                 },
                 success: function (reponse) {
                     $('#successMessage').text('Modification enregistrée avec succès!');
