@@ -1,0 +1,29 @@
+body {
+    font-family: 'Lato', sans-serif;
+    background-color: #f8f9fa;
+}
+#titreInventaire {
+    margin-top: 20px;
+    color: #343a40;
+    text-align: center;
+}
+.table {
+    margin-top: 20px;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.alert-danger input {
+    background-color: #f8d7da;
+    border: none;
+    color: #721c24;
+}
+.alert-danger input:disabled {
+    background-color: #f8d7da;
+}
+.no-alerts {
+    text-align: center;
+    margin-top: 100px;
+    color: #6c757d;
+}

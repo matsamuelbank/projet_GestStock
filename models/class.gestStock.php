@@ -292,4 +292,23 @@ class PdoGestStock
             return true;
         }
     }
+
+    public function addUser($uNom, $uPrenom,$uLogin, $uMdp, $uMail)
+    {
+        $req = 'INSERT INTO utilisateurs (uNom, uPrenom, uLogin, uMdp, uEmail) 
+                VALUES (:uNom, :uPrenom, :uLogin, :uMdp, :uMail)';
+
+        $stmt = PdoGestStock::$monPdo->prepare($req);
+        $stmt->bindParam(':uNom', $uNom);
+        $stmt->bindParam(':uPrenom', $uPrenom);
+        $stmt->bindParam(':uLogin', $uLogin);
+        $stmt->bindParam(':uMdp', $uMdp);
+        $stmt->bindParam(':uMail', $uMail);
+
+        if (!$stmt->execute()) {
+            afficherErreurSQL("Problème lors de l'insertion de l'utilisateur.", $req, PdoGestStock::$monPdo->errorInfo());
+        } else {
+            return true;
+        }
+    }
 }

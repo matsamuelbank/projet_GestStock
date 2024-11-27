@@ -26,13 +26,17 @@ class GestionStock
 
     public function ajoutArticle($nomProduit, $quantite, $prixUnitaire, $dateExp, $commentaire, $idUtilisateur)
     {
-        // On onbtien l'id du nouvel article inséré
-        $tArticleId = $this->pdo->addArticle($nomProduit, $quantite, $prixUnitaire, $dateExp, $commentaire, $idUtilisateur);
+        // Vérifie que les champs obligatoires ne sont pas vides
+        if (!empty($nomProduit) && !empty($quantite) && !empty($prixUnitaire) && !empty($dateExp) && !empty($commentaire)) {
+            // On obtient l'id du nouvel article inséré
+            $tArticleId = $this->pdo->addArticle($nomProduit, $quantite, $prixUnitaire, $dateExp, $commentaire, $idUtilisateur);
 
-        $tDate = date('Y-m-d');
-        $tType = 'ENTREE';
+            $tDate = date('Y-m-d');
+            $tType = 'ENTREE';
 
-        $this->pdo->addTransaction($tArticleId, $quantite, $tDate, $tType, $commentaire, $idUtilisateur);
+            $this->pdo->addTransaction($tArticleId, $quantite, $tDate, $tType, $commentaire, $idUtilisateur);
+        }
+        // Si un des champs obligatoires est vide, ne rien faire
     }
 
     public function ajoutTransaction($idArticle, $quantite, $tDate, $commentaire, $idUtilisateur, $dateExp, $prixUnitaire, $userTransac)

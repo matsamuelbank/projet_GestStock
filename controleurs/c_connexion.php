@@ -25,14 +25,29 @@ class UserAction {
                 $_SESSION['user'] = $infosUser;
                 header('Location: c_gestStock.php?action=accueil');
             } else {
-                // Le mot de passe est incorrect
                 $_SESSION['error'] = "Mot de passe incorrect. Veuillez réessayer.";
                 header('Location: ../index.php');
             }
         } else {
-            // L'utilisateur n'a pas été trouvé
             $_SESSION['error'] = "Utilisateur non trouvé. Veuillez réessayer.";
             header('Location: ../index.php');
+        }
+    }
+
+    public function inscription($uNom, $uPrenom, $uLogin, $uMdp, $uMail) {
+        $uNom = $this->filterData($uNom);
+        $uPrenom = $this->filterData($uPrenom);
+        $uLogin = $this->filterData($uLogin);
+        $uMdp = $this->filterData($uMdp);
+        $uMdp = password_hash($uMdp, PASSWORD_DEFAULT);
+        $uMail = $this->filterData($uMail);
+
+        $data = $this->pdo->addUser($uNom, $uPrenom,$uLogin, $uMdp, $uMail);
+        if ($data) {
+            header('Location: ../index.php');
+        } else {
+            $_SESSION['error'] = "Il y a eu une erreur lors de l'inscription. Veuillez réessayer.";
+            header('Location: ../vues/inscription.php');
         }
     }
 }
@@ -44,5 +59,20 @@ if ($_REQUEST['action'] == 'connexion') {
         $uLogin = $action->filterData($_POST['uLogin']);
         $uMdp = $action->filterData($_POST['uMdp']);
         $action->connexion($uLogin, $uMdp);
+    }
+}
+
+if ($_REQUEST['action'] == 'inscription') {
+    if (
+        isset($_POST['uNom']) && isset($_POST['uPrenom']) && isset($_POST['uLogin'])
+        && isset($_POST['uMdp']) && isset($_POST['uMail'])
+    ) {
+        $uNom = $_POST['uNom'];
+        $uPrenom = $_POST['uPrenom'];
+        $uLogin = $_POST['uLogin'];
+        $uMdp = $_POST['uMdp'];
+        $uMail = $_POST['uMail'];
+
+        $action->inscription($uNom, $uPrenom, $uLogin, $uMdp, $uMail);
     }
 }
